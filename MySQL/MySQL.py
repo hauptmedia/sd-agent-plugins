@@ -106,6 +106,9 @@ class MySQL(object):
         if not self.raw_config['MySQLServer'].get('mysql_port'):
             self.raw_config['MySQLServer']['mysql_port'] = "3306"
 
+        if not self.raw_config['MySQLServer'].get('mysql_server'):
+            self.raw_config['MySQLServer']['mysql_server'] = "localhost"
+
         self.checks_logger.debug('mysql: config set')
 
         try:
@@ -114,46 +117,34 @@ class MySQL(object):
             self.checks_logger.error('mysql: unable to import MySQLdb')
             return False
 
-        # Note, code here doesn't really make sense. See what I copied.
-        if not self.raw_config['MySQLServer'].get('mysql_port'):
-            # Connect
-            try:
+        # Connect
+        try:
+            if (self.raw_config['MySQLServer'].get('mysql_ssl_cert') and
+                self.raw_config['MySQLServer'].get('mysql_ssl_key')):
+                ssl = {
+                    'cert': self.raw_config['MySQLServer']['mysql_ssl_cert'],
+                    'key': self.raw_config['MySQLServer']['mysql_ssl_key']
+                }
+
                 MySQLdb.connect(
                     host=self.raw_config['MySQLServer']['mysql_server'],
                     user=self.raw_config['MySQLServer']['mysql_user'],
-                    passw=self.raw_config['MySQLServer']['mysql_pass'],
-                    port=int(self.raw_config['MySQLServer']['mysql_port'])
-                    )
-            except MySQLdb.OperationalError as message:
-                self.checks_logger.error(
-                    "mysql: MySQL connection error: {}".format(message))
-                return False
-        elif (self.raw_config['MySQLServer'].get('mysql_ssl_cert') and
-                self.raw_config['MySQLServer'].get('mysql_ssl_key')):
-            ssl = {
-                'cert': self.raw_config['MySQLServer']['mysql_ssl_cert'],
-                'key': self.raw_config['MySQLServer']['mysql_ssl_key']
-            }
-            MySQLdb.connect(
-                host=self.raw_config['MySQLServer']['mysql_server'],
-                user=self.raw_config['MySQLServer']['mysql_user'],
-                passwd=self.raw_config['MySQLServer']['mysql_pass'],
-                port=int(self.raw_config['MySQLServer']['mysql_port']),
-                ssl=ssl
-            )
-        else:
-            # Connect
-            try:
+                    passwd=self.raw_config['MySQLServer']['mysql_pass'],
+                    port=int(self.raw_config['MySQLServer']['mysql_port']),
+                    ssl=ssl
+                )
+            else:
                 MySQLdb.connect(
-                    host='localhost',
+                    host=self.raw_config['MySQLServer']['mysql_server'],
                     user=self.raw_config['MySQLServer']['mysql_user'],
                     passwd=self.raw_config['MySQLServer']['mysql_pass'],
-                    port=int(self.raw_config['MySQLServer']['mysql_port']))
-            except MySQLdb.OperationalError as message:
-                self.checks_logger.error(
-                    'mysql: MySQL connection error: {}'.format(message)
-                    )
-                return False
+                    port=int(self.raw_config['MySQLServer']['mysql_port'])
+                )
+        except MySQLdb.OperationalError as message:
+            self.checks_logger.error(
+                "mysql: MySQL connection error: {}".format(message))
+            return False
+
         return True
 
     def get_connection(self):
