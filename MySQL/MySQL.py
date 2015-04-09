@@ -117,28 +117,30 @@ class MySQL(object):
             self.checks_logger.error('mysql: unable to import MySQLdb')
             return False
 
+        config = self.raw_config['MySQLServer']
+
         # Connect
         try:
-            if (self.raw_config['MySQLServer'].get('mysql_ssl_cert') and
-                self.raw_config['MySQLServer'].get('mysql_ssl_key')):
-                ssl = {
-                    'cert': self.raw_config['MySQLServer']['mysql_ssl_cert'],
-                    'key': self.raw_config['MySQLServer']['mysql_ssl_key']
-                }
+            if (config.get('mysql_ssl_cert') and
+                    config.get('mysql_ssl_key')):
+                    ssl = {
+                        'cert': config['mysql_ssl_cert'],
+                        'key': config['mysql_ssl_key']
+                    }
 
-                MySQLdb.connect(
-                    host=self.raw_config['MySQLServer']['mysql_server'],
-                    user=self.raw_config['MySQLServer']['mysql_user'],
-                    passwd=self.raw_config['MySQLServer']['mysql_pass'],
-                    port=int(self.raw_config['MySQLServer']['mysql_port']),
-                    ssl=ssl
-                )
+                    MySQLdb.connect(
+                        host=config['mysql_server'],
+                        user=config['mysql_user'],
+                        passwd=config['mysql_pass'],
+                        port=int(config['mysql_port']),
+                        ssl=ssl
+                    )
             else:
                 MySQLdb.connect(
-                    host=self.raw_config['MySQLServer']['mysql_server'],
-                    user=self.raw_config['MySQLServer']['mysql_user'],
-                    passwd=self.raw_config['MySQLServer']['mysql_pass'],
-                    port=int(self.raw_config['MySQLServer']['mysql_port'])
+                    host=config['mysql_server'],
+                    user=config['mysql_user'],
+                    passwd=config['mysql_pass'],
+                    port=int(config['mysql_port'])
                 )
         except MySQLdb.OperationalError as message:
             self.checks_logger.error(
@@ -428,7 +430,8 @@ class MySQL(object):
             # note remove this.
             try:
                 # Key cache hit ratio
-                # http://www.percona.com/blog/2010/02/28/why-you-should-ignore-mysqls-key-cache-hit-ratio/
+                # Useful information about why you should ignore
+                # MySQL's key cache hit ratio: http://bit.ly/1OcdJvT
                 key_read = self.get_db_results(
                     db, 'SHOW STATUS LIKE "Key_reads"')
 
